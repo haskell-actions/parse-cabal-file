@@ -1,5 +1,8 @@
 name: Parse Cabal File
 description: Parse information in a provided cabal file
+branding:
+  icon: file-text
+  color: yellow
 
 inputs:
   cabal_file:

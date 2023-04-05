@@ -1,0 +1,68 @@
+name: parse-cabal-file
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        uses: actions/checkout@v3
+      -
+        run: ghc -Wall -Werror ParseCabalFile.hs
+
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - ubuntu-22.04
+          - ubuntu-20.04
+          - ubuntu-18.04
+          - macos-latest
+          - macos-12
+          - macos-11
+          - windows-latest
+          - windows-2022
+          - windows-2019
+    defaults:
+      run:
+        shell: bash
+    steps:
+      -
+        uses: actions/checkout@v3
+      -
+        name: Write test cabal file
+        run: |
+          echo 'name: foo' >> foo.cabal
+          echo 'version: 12.34' >> foo.cabal
+      -
+        name: Run action
+        uses: ./
+        id: cabal_file
+        with:
+          cabal_file: foo.cabal
+      -
+        name: Check action worked
+        run: |
+          if [[ "${{ steps.cabal_file.outputs.version }}" != "12.34" ]]; then
+            echo 'Action failed!' >&2
+            exit 1
+          fi
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        uses: actions/checkout@v3
+      -
+        uses: fourmolu/fourmolu-action@v7
+        with:
+          pattern: '*.hs'
+          extra-args: >
+            --indentation 2
+            --indent-wheres true
